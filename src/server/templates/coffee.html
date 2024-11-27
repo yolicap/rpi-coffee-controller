@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<body>
+<head>
+<link rel="stylesheet" href="static/style.css"/>
+</head>
+<h1>Coffee in Bed</h1>
+<h2>Kathie Huynh and Itzel Polanco Salgado</h2>
+<p>My first paragraph.</p>
+<p id="brew-time-message">Hello</p>
+	<script>
+		let brew-time-message = "Your coffee is not currently"
+				+ "set to brew at a certain time";
+		document.getElementById("brew-time-message").innerHTML =
+			brew-time-message;
+	</script>
+<form action="" method="post">
+	<button name="start"
+		value="start"
+		type="submit">Start Coffee Making!</button>
+	<button name="cancel"
+		value ="cancel"
+		type="submit">Cancel Brewing</button>
+</form>
+<form action="" method="POST">
+	<label for="time">Choose a time for daily coffee brew</label>
+	<input type="time" id="time" name="time" required />
+	<button name="submit-brew-time"
+		type="submit"
+		onclick="SubmitTime()">Save Brew Time</button>
+</form>
+<form action="" method="POST">
+	<button name="stop-daily-brewing"
+		type="submit"
+		onclick="RemoveTime()">Remove daily brewing</button>
+</form>
+	<script>
+		function SubmitTime() {
+			let time = document.getElementById("time").value;
+			brew-time-message = "Your coffee is set to brew"
+				+ " at " + time;
+		}
+		function RemoveTime() {
+			brew-time-message = "Your coffee is not currently"
+				+ "set to brew at a certain time";
+		}	
+ 
+	</script>
+</body>
+</html>
