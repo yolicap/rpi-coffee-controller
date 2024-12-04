@@ -37,12 +37,22 @@ def output_handler():
 		state = statemachine.get_state()
 		if state == 0:
 			pi.write(blue_led, 1)
+			pi.write(red_led, 0)
 			# TODO signal(s) for not brewing
 
 		elif state == 1:
 			pi.write(blue_led, not pi.read(blue_led))
+			pi.write(red_led, 0)
+			# there is probably a better way to do the blinking
+			# but waiting 0.5 seconds should not be too much of a problem because
+			# brewing for 0.5 too long or too short will not make much of a difference
+			time.sleep(0.5)
 
 			# TODO signal(s) for brewing
+		elif state == 2:
+			pi.write(red_led, 1)
+			pi.write(blue_led, 0)
+			# TODO signal(s) for not brewing
 
 def start():
 	input_process = Thread(target = input_handler)
