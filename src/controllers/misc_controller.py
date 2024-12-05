@@ -1,8 +1,8 @@
 import pigpio
 
-pi = pigpio.pi()
-print("read: ", pi.read(4))
-print("write: ", pi.write(4, 1))
+# pi = pigpio.pi()
+# print("read: ", pi.read(4))
+# print("write: ", pi.write(4, 1))
 
 # handles raspberry pi inputs and outputs
 class MiscController():

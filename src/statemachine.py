@@ -19,10 +19,10 @@ class StateMachine():
 	# if the user has remotely sent a request to brew
 	brew_request = False
 	cancel_request = False
-	
+
 	def __init__(self):
-		pass	
-	
+		pass
+
 	# get difference in seconds from now until preset brewing time
 	# preset_time format: HH:MM
 	def get_delay(self):
@@ -32,7 +32,8 @@ class StateMachine():
 
 		# assume for now that datetime.now() gets the correct time in the correct zone
 		curr_time = datetime.datetime.now().time()
-		curr_hour = curr_time.hour
+		print("current time: ", curr_time)
+		curr_hour = (curr_time.hour - 5) % 24
 		curr_min = curr_time.minute
 		curr_sec = curr_time.second
 
@@ -57,16 +58,17 @@ class StateMachine():
 
 		# count minutes in preset time
 		delay += int(preset_min) * 60
-
+		print("got delay of ", delay, " seconds")
 		return delay
 
 	# function to run when timer ends. handle brew at a set time
 	def time_brewing(self):
 		self.timer_done = True
 		# restart timer
-		set_time()
+		set_time(self.preset_time)
 
-	def set_time(self):
+	def set_time(self, preset_time):
+		self.preset_time = preset_time
 		if self.timer:
 			self.timer.cancel()
 		self.timer = Timer(self.get_delay(), function=self.time_brewing)
@@ -108,7 +110,7 @@ class StateMachine():
 
 			elif self.state == 1:
 				# SET OUTPUTS
-				misc_ctrl.set_blue_led(not misc_controller.get_blue_led())
+				misc_ctrl.set_blue_led(not misc_ctrl.get_blue_led())
 				misc_ctrl.set_red_led(0)
 				# there is probably a better way to do the blinking
 				# but waiting 0.5 seconds should not be too much of a problem because
@@ -128,7 +130,7 @@ class StateMachine():
 
 				# HANDLE STATE TRANSITIONS
 				# filter cleaned button pressed
-				if misc.ctrl.clean_button_pressed():
+				if misc_ctrl.clean_button_pressed():
 					self.state = 0
 
 			# reset flags

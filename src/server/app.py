@@ -1,8 +1,11 @@
 from threading import *
 import os
 import sys
-parent = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+parent = os.path.abspath(os.path.join(curr_dir, ".."))
 sys.path.append(parent)
+# parent = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+# sys.path.append(parent)
 import statemachine
 
 sm = None
@@ -29,6 +32,8 @@ def index():
 			sm.set_cancel_request()
 			return 'Cancelling brewing'
 		elif "submit-brew-time" in request.form:
+			print(request.form['time'])
+			print(type(request.form['time']))
 			sm.set_time(request.form['time'])
 			return 'Brewing time set to ' + request.form['time']
 	return render_template('coffee.html')
