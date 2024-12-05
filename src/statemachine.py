@@ -26,27 +26,36 @@ class StateMachine():
 	# get difference in seconds from now until preset brewing time
 	# preset_time format: HH:MM
 	def get_delay(self):
-		preset_hour = self.preset_time[0:2]
-		preset_min = self.preset_time[3:5]
+		print("preset time: ", self.preset_time)
+		preset_hour = int(self.preset_time[0:2])
+		preset_min = int(self.preset_time[3:5])
 		delay = 0
 
 		# assume for now that datetime.now() gets the correct time in the correct zone
 		curr_time = datetime.datetime.now().time()
 		print("current time: ", curr_time)
-		curr_hour = (curr_time.hour - 5) % 24
-		curr_min = curr_time.minute
-		curr_sec = curr_time.second
+		curr_hour = (int(curr_time.hour) - 5) % 24
+		curr_min = int(curr_time.minute)
+		curr_sec = int(curr_time.second)
 
 		# count remainder of seconds in current minute
+		# assume user will not set time within the same minute
 		delay += (60 - curr_sec)
 		curr_min += 1
 		if curr_min >= 60:
 			curr_hour += 1
 			curr_min = 0
+		print("delay after seconds: ", delay)
 
 		# count remainder of minutes in current hour
-		delay += (60 - curr_min) * 60
-		curr_hour = (curr_hour + 1) % 24
+		if curr_hour != preset_hour or (curr_hour == int(preset_hour) and int(preset_min) < curr_min):
+			delay += (60 - curr_min) * 60
+			curr_hour = (curr_hour + 1) % 24
+		else:
+			# count difference in minutes
+			delay += (int(preset_min) - curr_min) * 60
+			return delay
+		print("delay after ", 60 - curr_min, " minutes: ", delay)
 
 		# count difference in hours
 		hour_diff = 0
@@ -55,6 +64,7 @@ class StateMachine():
 		else:
 			hour_diff = int(preset_hour) - curr_hour
 		delay += hour_diff * 60 * 60
+		print("delay after hour: ", delay)
 
 		# count minutes in preset time
 		delay += int(preset_min) * 60
