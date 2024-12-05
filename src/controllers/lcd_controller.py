@@ -1,4 +1,4 @@
-import serial, pigpio, time
+import serial, pigpio, time, traceback
 
 class LCDController():
 
@@ -22,23 +22,28 @@ class LCDController():
         init_status = False
 
         # initiate serial on provided ports
-        self.PI.set_pull_up_down(self.PIN_RS, pigpio.PUD_DOWN)
-        self.PI.set_mode(self.PIN_RS, pigpio.OUTPUT)
+        # self.PI.set_pull_up_down(self.PIN_RS, pigpio.PUD_DOWN)
+        # self.PI.set_mode(self.PIN_RS, pigpio.OUTPUT)
         self.PI.set_mode(self.PIN_TX, pigpio.ALT0)
-        self.PI.set_mode(self.PIN_TR, pigpio.ATL0)
+        self.PI.set_mode(self.PIN_RX, pigpio.ALT0)
+
+        # import subprocess
+        # result = subprocess.run(['ls', '/dev/'], stdout=subprocess.PIPE)
+        # print(result.stdout)
 
         try:
             self.LCD = serial.Serial(
                 port="/dev/ttyS0", 
                 baudrate=9600, 
             )
-            self.LCD.open()
+            # self.LCD.open()
 
             # TODO init signal
 
             print("Successfully started LCD")
             init_status = True
         except IOError:
+            print(traceback.format_exc())
             print("Could not initiate LCD")
             init_status = False
 
@@ -46,20 +51,34 @@ class LCDController():
         self.INIT_STATUS = init_status
 
         # set baud
-        self.LCD.write(b'\x00\x0B\x01\x38')
+        # self.LCD.write(b'\x00\x0B\x01\x38')
 
         # resset and clear screen
         self.reset()
         self.clear()
 
+        time.sleep(1)
         # set text configs
-        self.LCD.write(b'\xFF\x7F\xFF\xFF') # initial text color, white
+        # self.LCD.write(b'\xFF\x7F\xFF\xFF') # initial text color, white
+        time.sleep(1)
         # self.LCD.write(b'') # initial screen oreintation, portrait
         self.LCD.write(b'\xFF\x7D\x00\x07') # initial font FONT_7X8
+        time.sleep(1)
 
         return init_status
     
-    def write_signal(signal):
+    def write_signal(self, signal):
+        response = None
+        self.LCD.write(signal)
+        while not self.LCD.readable():
+            time.sleep(0.01)
+        if self.LCD.readable():
+            response = self.LCD.read(size=1)
+        if response == b'\x06':
+            print("ack recieved from LCD")
+        else :
+            print("nack recieved : ", response)
+
     #     while (!_cmd.readable()) wait_ms(TEMPO);              // wait for screen answer
     # if (_cmd.readable()) resp = _cmd.getc();           // read response if any
     # switch (resp) {
@@ -73,22 +92,30 @@ class LCDController():
     #         resp =  0;                                 // else return   0
     #         break;
     # }
-        pass
+        return response
     
     def reset(self):
-        self.PI.write(self.PIN_RS, 1)
-        time.sleep(3)
         self.PI.write(self.PIN_RS, 0)
+        time.sleep(0.5)
+        self.PI.write(self.PIN_RS, 1)
+        time.sleep(5)
+
+        self.LCD.reset_output_buffer()
+        print("reset lcd")
 
     def clear(self):
         self.LCD.write(b'\xFF\xD7')
+        print("cleared lcd")
 
     def message(self, msg: str):
         signal = b'\x00\x66'
-        signal += str.encode(str[:255])
+        # signal += str.encode(msg[:255])
+        signal += str.encode(msg)
         signal += b'\x00'
 
         self.LCD.write(signal)
+
+        print("sent string to LCD")
 
         # TODO : wait till sucess
 
@@ -106,4 +133,12 @@ class LCDController():
 
 if __name__ == "__main__":
     # use arguments as ionput for message
-    pass
+    pi = pigpio.pi()
+    lcd_controller = LCDController(pi, 14, 15, 16)
+    lcd_controller.init()
+    time.sleep(5)
+    lcd_controller.message("hello world!")
+    time.sleep(5)
+    lcd_controller.write_signal(b'\xFF\xD7')
+    lcd_controller.write_signal(b'\x00\x06\x48\x65\x6C\x6C\x6F\x00')
+

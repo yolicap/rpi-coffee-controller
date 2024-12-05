@@ -1,5 +1,6 @@
 from threading import *
-from ..statemachine import test
+import sys
+import os
 
 def state_machine_handler():
 	sm = statemachine.StateMachine()

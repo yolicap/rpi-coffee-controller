@@ -5,6 +5,9 @@ import datetime
 import time
 import misc_controller
 
+def test():
+	pass
+
 class StateMachine():
 	preset_time = None
 	timer = None
