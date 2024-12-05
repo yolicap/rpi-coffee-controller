@@ -1,4 +1,4 @@
-import statemachine
+from '../statemachine.py' import statemachine
 from threading import *
 
 def state_machine_handler():
