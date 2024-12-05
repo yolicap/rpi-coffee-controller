@@ -3,11 +3,10 @@
 from threading import *
 import datetime
 import time
+import misc_controller
 
 preset_time = None
 timer = None
-clean_button_pressed = False
-brew_button_pressed = False
 
 # Shared Variables
 state = 0
@@ -54,14 +53,6 @@ def get_delay():
 
 	return delay
 
-def press_clean_button():
-	global clean_button_pressed
-	clean_button_pressed = True
-
-def press_brew_button():
-	global brew_button_pressed
-	brew_button_pressed = True
-
 # handle brewing at a set time
 def time_brewing():
 	global state
@@ -85,31 +76,56 @@ def start_machine():
 	global state
 	global brew_request
 	global brew_lock
-	global brew_button_pressed
-	global clean_button_pressed
+
+	# initalize components
+	pi = pigpio.pi()
+	misc_ctrl = misc_controller.MiscController(pi, blue_led=22, red_led=27,
+		brew_button=17, clean_button=23)
+
+
 	while True:
 		if state == 0:
+			# SET OUTPUTS
+			# can this be more efficient? constantly setting to the same value?
+			misc_ctrl.set_blue_led(1)
+			misc_ctrl.set_red_led(0)
+
+			# HANDLE STATE TRANSITIONS
 			# manual brewing by button press
-			if brew_button_pressed:
+			if misc_ctrl.brew_button_pressed():
 				state = 1
+
 			# remote request to brew
 			elif brew_request:
 				state = 1
-		elif state == 2:
-			# filter cleaned button pressed
-			if clean_button_pressed:
-				state = 0
+
 		elif state == 1:
+			# SET OUTPUTS
+			misc_ctrl.set_blue_led(not misc_controller.get_blue_led())
+			misc_ctrl.set_red_led(0)
+			# there is probably a better way to do the blinking
+			# but waiting 0.5 seconds should not be too much of a problem because
+			# brewing for 0.5 too long or too short will not make much of a difference
+			time.sleep(0.5)
+
+			# HANDLE STATE TRANSITIONS
 			# TODO how to know when brewing is done?
 			pass
-		# TODO race conditions? what if button is pressed right before this?
-		# assume press lasts longer than loop ?
-		# if button is pressed in wrong state, remove press and do nothing
-		brew_button_pressed = False
-		clean_button_pressed = False
+
+		elif state == 2:
+			# SET OUTPUTS
+			misc_ctrl.set_red_led(1)
+			misc_ctrl.set_blue_led(0)
+
+			# HANDLE STATE TRANSITIONS
+			# filter cleaned button pressed
+			if misc.ctrl.clean_button_pressed():
+				state = 0
+
 		brew_lock.acquire()
 		brew_request = False
 		brew_lock.release()
+
 		# allow 0.2 seconds for user to press buttons
 		time.sleep(0.2)
 
