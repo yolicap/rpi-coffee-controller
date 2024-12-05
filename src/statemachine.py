@@ -81,10 +81,6 @@ def set_time():
 	timer = Timer(get_delay(), time_brewing)
 	timer.start()
 
-def get_state():
-	global state
-	return state
-
 def start_machine():
 	global state
 	global brew_request
