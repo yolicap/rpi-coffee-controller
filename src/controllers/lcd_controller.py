@@ -1,4 +1,4 @@
-import serial
+import serial, pigpio, time
 
 class LCDController():
 
@@ -21,11 +21,15 @@ class LCDController():
 
         init_status = False
 
-        # TODO : what is the correct port?
         # initiate serial on provided ports
+        self.PI.set_pull_up_down(self.PIN_RS, pigpio.PUD_DOWN)
+        self.PI.set_mode(self.PIN_RS, pigpio.OUTPUT)
+        self.PI.set_mode(self.PIN_TX, pigpio.ALT0)
+        self.PI.set_mode(self.PIN_TR, pigpio.ATL0)
+
         try:
             self.LCD = serial.Serial(
-                port=None, 
+                port="/dev/ttyS0", 
                 baudrate=9600, 
             )
             self.LCD.open()
@@ -72,7 +76,9 @@ class LCDController():
         pass
     
     def reset(self):
-        pass
+        self.PI.write(self.PIN_RS, 1)
+        time.sleep(3)
+        self.PI.write(self.PIN_RS, 0)
 
     def clear(self):
         self.LCD.write(b'\xFF\xD7')
@@ -97,3 +103,7 @@ class LCDController():
 
     def ready_message(self):
         self.message("ready to brew")
+
+if __name__ == "__main__":
+    # use arguments as ionput for message
+    pass
