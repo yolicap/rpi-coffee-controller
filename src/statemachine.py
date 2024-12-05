@@ -100,7 +100,7 @@ class StateMachine():
 
 			elif self.state == 1:
 				# SET OUTPUTS
-				misc_ctrl.set_blue_led(not misc_controller.get_blue_led())
+				misc_ctrl.set_blue_led(not misc_ctrl.get_blue_led())
 				misc_ctrl.set_red_led(0)
 				# there is probably a better way to do the blinking
 				# but waiting 0.5 seconds should not be too much of a problem because
