@@ -1,5 +1,9 @@
 from threading import *
-from ..statemachine import test
+import os
+import sys
+parent = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+sys.path.append(parent)
+import statemachine
 
 def state_machine_handler():
 	sm = statemachine.StateMachine()
@@ -19,6 +23,7 @@ def index():
 		elif "cancel" in request.form:
 			return 'Cancelling brewing'
 		elif "submit-brew-time" in request.form:
+			statemachine.set_brew_request()
 			return 'Brewing time set to ' + request.form['time']
 	return render_template('coffee.html')
 # @app.route('/newpage')

@@ -2,11 +2,13 @@
 # states: {0: idle (not brewing, clean), 1: brewing, 2: finished (not brewing, dirty)}
 from threading import *
 import datetime
+import pigpio
 import time
+import os
+import sys
+child = os.path.abspath(os.path.join(os.path.dirname(__file__), 'controllers'))
+sys.path.append(child)
 import misc_controller
-
-def test():
-	pass
 
 class StateMachine():
 	preset_time = None
@@ -15,8 +17,6 @@ class StateMachine():
 	state = 0
 	# if the user has remotely sent a request to brew
 	brew_request = False
-	brew_lock = Lock()
-
 	def __init__(self):
 		pass
 
@@ -67,8 +67,11 @@ class StateMachine():
 	def set_time(self):
 		if self.timer:
 			self.timer.cancel()
-		self.timer = Timer(get_delay(), function=self.time_brewing)
+		self.timer = Timer(self.get_delay(), function=self.time_brewing)
 		self.timer.start()
+
+	def set_brew_request(self):
+		self.brew_request = True
 
 	def start_machine(self):
 		print("starting state machine. initializing components")
@@ -92,6 +95,7 @@ class StateMachine():
 
 				# remote request to brew
 				elif self.brew_request:
+					print("in brewing state from brew request")
 					self.state = 1
 
 			elif self.state == 1:
@@ -117,9 +121,8 @@ class StateMachine():
 				if misc.ctrl.clean_button_pressed():
 					self.state = 0
 
-			self.brew_lock.acquire()
+			# reset flags
 			self.brew_request = False
-			self.brew_lock.release()
 
 			# allow 0.2 seconds for user to press buttons
 			time.sleep(0.2)
