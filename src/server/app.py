@@ -29,8 +29,12 @@ def index():
 			sm.set_brew_request()
 			return 'Starting coffee making!'
 		elif "cancel" in request.form:
+			sm.set_cancel_request()
 			return 'Cancelling brewing'
 		elif "submit-brew-time" in request.form:
+			print(request.form['time'])
+			print(type(request.form['time']))
+			sm.set_time(request.form['time'])
 			return 'Brewing time set to ' + request.form['time']
 	return render_template('coffee.html')
 # @app.route('/newpage')
