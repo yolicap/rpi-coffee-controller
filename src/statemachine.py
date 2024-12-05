@@ -13,13 +13,16 @@ import misc_controller
 class StateMachine():
 	preset_time = None
 	timer = None
+	timer_done = False
 
 	state = 0
 	# if the user has remotely sent a request to brew
 	brew_request = False
+	cancel_request = False
+	
 	def __init__(self):
-		pass
-
+		pass	
+	
 	# get difference in seconds from now until preset brewing time
 	# preset_time format: HH:MM
 	def get_delay(self):
@@ -57,12 +60,11 @@ class StateMachine():
 
 		return delay
 
-	# handle brewing at a set time
+	# function to run when timer ends. handle brew at a set time
 	def time_brewing(self):
-		if self.state == 0:
-			self.state = 1
-			# restart timer
-			set_time()
+		self.timer_done = True
+		# restart timer
+		set_time()
 
 	def set_time(self):
 		if self.timer:
@@ -72,6 +74,9 @@ class StateMachine():
 
 	def set_brew_request(self):
 		self.brew_request = True
+	
+	def set_cancel_request(self):
+		self.cancel_request = True
 
 	def start_machine(self):
 		print("starting state machine. initializing components")
@@ -79,7 +84,6 @@ class StateMachine():
 		pi = pigpio.pi()
 		misc_ctrl = misc_controller.MiscController(pi, blue_led=22, red_led=27,
 			brew_button=17, clean_button=23)
-
 
 		while True:
 			if self.state == 0:
@@ -91,11 +95,15 @@ class StateMachine():
 				# HANDLE STATE TRANSITIONS
 				# manual brewing by button press
 				if misc_ctrl.brew_button_pressed():
+					print("in brew state from button press")
 					self.state = 1
 
 				# remote request to brew
 				elif self.brew_request:
 					print("in brewing state from brew request")
+					self.state = 1
+				elif self.timer_done:
+					print("in brewing state from timer done")
 					self.state = 1
 
 			elif self.state == 1:
@@ -109,7 +117,9 @@ class StateMachine():
 
 				# HANDLE STATE TRANSITIONS
 				# TODO how to know when brewing is done?
-				pass
+				if self.cancel_request:
+					print("in dirty state from cancel")
+					self.state = 2
 
 			elif self.state == 2:
 				# SET OUTPUTS
