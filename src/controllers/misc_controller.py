@@ -1,6 +1,6 @@
 import pigpio
 
-class LCDController():
+class MiscController():
 
     def __init__(self, ):
         pass
