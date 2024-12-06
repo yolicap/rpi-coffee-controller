@@ -83,6 +83,7 @@ class StateMachine():
 
 	def set_brew_request(self):
 		self.brew_request = True
+		print("brew request set")
 
 	def set_cancel_request(self):
 		self.cancel_request = True
@@ -93,6 +94,7 @@ class StateMachine():
 		pi = pigpio.pi()
 		# GPIO numbers
 		blue_led = 22
+		green_led = 5
 		red_led = 27
 		brew_button = 17
 		clean_button = 23
@@ -100,47 +102,58 @@ class StateMachine():
 		heat = 24
 		buzzer = 25
 		# controllers
-		misc_ctrl = misc_controller.MiscController(pi, blue_led, red_led,
+		misc_ctrl = misc_controller.MiscController(pi, red_led, green_led, blue_led,
 			brew_button, clean_button)
 		brew_ctrl = brewer_controller.BrewerController(pi, thermo, heat, buzzer)
 
 		while True:
+			print("state: ", self.state)
 			if self.state == 0:
 				# SET OUTPUTS
 				# can this be more efficient? constantly setting even though already set?
-				misc_ctrl.set_blue_led()
+				misc_ctrl.set_green_led()
 
 				# HANDLE STATE TRANSITIONS
 				# manual brewing by button press
 				if misc_ctrl.brew_button_pressed():
 					print("in brew state from button press")
 					self.state = 1
+					# start brewing
+					brew_ctrl.brew(5)
+					# misc_ctrl.blink_leds()
 
 				# remote request to brew
 				elif self.brew_request:
 					print("in brewing state from brew request")
 					self.state = 1
 					self.brew_request = False
+					# start brewing
+					brew_ctrl.brew(5)
+					# misc_ctrl.blink_leds()
 				# brewing at set time
 				elif self.timer_done:
 					print("in brewing state from timer done")
 					self.state = 1
 					self.timer_done = False
+					# start brewing
+					brew_ctrl.brew(5)
+					# misc_ctrl.blink_leds()
 				else:
 					# if input sent in wrong state, clear flags
 					self.cancel_request = False
 
 			elif self.state == 1:
+				misc_ctrl.set_blue_led()
+				print("is brewing: ", brew_ctrl.is_brewing())
 				if brew_ctrl.is_brewing():
 					if self.cancel_request:
 						print("in dirty state from cancel")
 						brew_ctrl.stop_brew()
-						misc_ctrl.stop_blinking()
+						# misc_ctrl.stop_blinking()
 						self.cancel_request = False
 						self.state = 2
-				else: # start brewing
-					brew_ctrl.brew(5)
-					misc_ctrl.blink_leds()
+				else: # the timer has run out and stopped brewing
+					self.state = 2
 
 				# clear flags
 				self.brew_request = False
@@ -148,16 +161,17 @@ class StateMachine():
 
 			elif self.state == 2:
 				# SET OUTPUTS
-				misc_ctrl.set_red_led(0)
+				misc_ctrl.set_red_led()
 
 				# HANDLE STATE TRANSITIONS
 				# filter cleaned button pressed
 				if misc_ctrl.clean_button_pressed():
+					print("got clean button pressed")
 					self.state = 0
 				else:
 					self.timer_done = False
 					self.brew_request = False
 					self.cancel_request = False
 
-			# allow 0.2 seconds for user to press buttons
-			time.sleep(0.2)
+			# allow seconds for user to press buttons
+			time.sleep(0.5)

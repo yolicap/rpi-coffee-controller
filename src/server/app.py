@@ -12,8 +12,12 @@ sm = None
 
 def state_machine_handler():
 	global sm
-	sm = statemachine.StateMachine()
-	sm.start_machine()
+	if not sm:
+		sm = statemachine.StateMachine()
+		print("starting state machine in app.py")
+		sm.start_machine()
+	else:
+		print("state machine already initialized")
 
 # Use Flask as web framework for web server
 from flask import Flask, render_template, request
@@ -44,4 +48,4 @@ def index():
 if __name__ == '__main__':
 	state_machine_process = Thread(target = state_machine_handler)
 	state_machine_process.start()
-	app.run(debug = True, host = '0.0.0.0')
+	app.run(use_reloader=False, debug = True, host = '0.0.0.0')

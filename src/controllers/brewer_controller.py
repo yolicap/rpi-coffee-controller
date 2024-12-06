@@ -72,9 +72,9 @@ class BrewerController():
 
     # set buzzer to high for a second
     def buzzer(self):
-        self.PI.write(self.PIN_BUZZER, 1)
+        self.PI.write(self.PIN_BUZZ, 1)
         time.sleep(1.0) 
-        self.PI.write(self.PIN_BUZZER, 0)
+        self.PI.write(self.PIN_BUZZ, 0)
 
     def is_brewing(self):
         return self.BREWING
