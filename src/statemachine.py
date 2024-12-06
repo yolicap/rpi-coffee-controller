@@ -10,6 +10,7 @@ child = os.path.abspath(os.path.join(os.path.dirname(__file__), 'controllers'))
 sys.path.append(child)
 import brewer_controller
 import misc_controller
+import lcd_controller
 
 class StateMachine():
 	preset_time = None
@@ -83,7 +84,6 @@ class StateMachine():
 
 	def set_brew_request(self):
 		self.brew_request = True
-		print("brew request set")
 
 	def set_cancel_request(self):
 		self.cancel_request = True
@@ -101,16 +101,22 @@ class StateMachine():
 		thermo = 26
 		heat = 24
 		buzzer = 25
+		rx = 14
+		tx = 15
+		reset = 16
 		# controllers
 		misc_ctrl = misc_controller.MiscController(pi, red_led, green_led, blue_led,
 			brew_button, clean_button)
 		brew_ctrl = brewer_controller.BrewerController(pi, thermo, heat, buzzer)
+		lcd_ctrl = lcd_controller.LCDController(pi, rx, tx, reset)
+		lcd_ctrl.init()
+		time.sleep(5)
 
 		while True:
-			print("state: ", self.state)
 			if self.state == 0:
 				# SET OUTPUTS
 				# can this be more efficient? constantly setting even though already set?
+				lcd_ctrl.ready_message()
 				misc_ctrl.set_green_led()
 
 				# HANDLE STATE TRANSITIONS
@@ -143,8 +149,8 @@ class StateMachine():
 					self.cancel_request = False
 
 			elif self.state == 1:
+				lcd_ctrl.brewing_message()
 				misc_ctrl.set_blue_led()
-				print("is brewing: ", brew_ctrl.is_brewing())
 				if brew_ctrl.is_brewing():
 					if self.cancel_request:
 						print("in dirty state from cancel")
@@ -160,6 +166,7 @@ class StateMachine():
 				self.timer_done = False
 
 			elif self.state == 2:
+				lcd_ctrl.cleaning_message()
 				# SET OUTPUTS
 				misc_ctrl.set_red_led()
 

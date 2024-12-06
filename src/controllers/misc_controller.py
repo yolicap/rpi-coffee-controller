@@ -38,19 +38,16 @@ class MiscController():
         return self.pi.read(self.clean_button)
 
     def set_blue_led(self):
-        print("setting blue led")
         self.pi.write(self.blue_led, 1)
         self.pi.write(self.green_led, 0)
         self.pi.write(self.red_led, 0)
 
     def set_red_led(self):
-        print("setting red led")
         self.pi.write(self.red_led, 1)
         self.pi.write(self.green_led, 0)
         self.pi.write(self.blue_led, 0)
 
     def set_green_led(self):
-        print("setting green led")
         self.pi.write(self.red_led, 0)
         self.pi.write(self.green_led, 1)
         self.pi.write(self.blue_led, 0)

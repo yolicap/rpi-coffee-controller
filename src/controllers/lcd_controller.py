@@ -121,16 +121,24 @@ class LCDController():
     # predefined messages for your convinience 
 
     def brewing_message(self):
+        self.clear()
         self.message("brewing...")
+        time.sleep(0.5)
 
     def keep_warm_message(self):
+        self.clear()
         self.message("keeping warm")
+        time.sleep(0.5)
 
     def cleaning_message(self):
+        self.clear()
         self.message("clean me!")
+        time.sleep(0.5)
 
     def ready_message(self):
+        self.clear()
         self.message("ready to brew")
+        time.sleep(0.5)
 
 # used for testing. ignore but keep for future testing
 if __name__ == "__main__":
