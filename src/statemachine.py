@@ -271,8 +271,22 @@ class LCDController():
     # ... those extra steps are flushing the output buffer and waiting .. just in case
     def write_signal(self, signal):
         response = None
-        self.LCD.write(signal)
         self.LCD.flush()
+
+        # self.LCD.write(signal.pop(0))
+        # self.LCD.write(signal.pop(0))
+        for byte in signal:
+            self.LCD.write(byte)
+            time.wait(0.0005)
+            
+		# for (i = 0; i < number; i++) writeBYTE(command[i]);
+        # 	_cmd.putc(c);
+		# 	wait_ms(1);
+
+        # self.LCD.write(signal)
+        # self.LCD.flush()
+        
+
         while not self.LCD.readable():
             time.sleep(0.01)
 
