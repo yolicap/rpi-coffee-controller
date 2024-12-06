@@ -104,28 +104,28 @@ class StateMachine():
         rx = 14
         tx = 15
         reset = 16
+        
+        mbed_sig_lsb = 6
+        mbed_sig_msb = 13
+        
         # controllers
         misc_ctrl = misc_controller.MiscController(pi, red_led, green_led, blue_led,
             brew_button, clean_button)
         brew_ctrl = brewer_controller.BrewerController(pi, thermo, heat, buzzer)
-        lcd_ctrl = lcd_controller.LCDController(pi, rx, tx, reset)
-        # lcd_controller.testing()
-        print("lcd init : ", lcd_ctrl.init())
-        time.sleep(10)
-        lcd_ctrl.write_signal(b'\xFF\xD7')
-        lcd_ctrl.write_signal(b'\x00\x06\x48\x65\x6C\x6C\x6F\x00')
-        print("rx mode: ", pi.get_mode(rx))
-        print("tx mode: ", pi.get_mode(tx))
-
-        lcd_ctrl.ready_message()
-        time.sleep(0.5)
-        print("sent ready message before loop")
+        
+        # lcd_ctrl = lcd_controller.LCDController(pi, rx, tx, reset)
+		# lcd_ctrl.init()
+        # lcd_ctrl.write_signal(b'\xFF\xD7')
+        # lcd_ctrl.write_signal(b'\x00\x06\x48\x65\x6C\x6C\x6F\x00')
 
         while True:
             if self.state == 0:
                 # SET OUTPUTS
                 # can this be more efficient? constantly setting even though already set?
-                lcd_ctrl.ready_message()
+                # lcd_ctrl.ready_message()
+                pi.write(mbed_sig_lsb, 0)
+                pi.write(mbed_sig_msb, 0)
+
                 time.sleep(0.5)
                 misc_ctrl.set_green_led()
 
@@ -159,7 +159,9 @@ class StateMachine():
                     self.cancel_request = False
 
             elif self.state == 1:
-                lcd_ctrl.brewing_message()
+                # lcd_ctrl.brewing_message()
+                pi.write(mbed_sig_lsb, 1)
+                pi.write(mbed_sig_msb, 0)
                 time.sleep(0.5)
                 misc_ctrl.set_blue_led()
                 if brew_ctrl.is_brewing():
@@ -177,7 +179,9 @@ class StateMachine():
                 self.timer_done = False
 
             elif self.state == 2:
-                lcd_ctrl.cleaning_message()
+                # lcd_ctrl.cleaning_message()
+                pi.write(mbed_sig_lsb, 0)
+                pi.write(mbed_sig_msb, 1)
                 time.sleep(0.5)
                 # SET OUTPUTS
                 misc_ctrl.set_red_led()
