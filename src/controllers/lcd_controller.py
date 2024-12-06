@@ -1,5 +1,6 @@
 import serial, pigpio, time, traceback
 
+# Objectifies LCD
 class LCDController():
 
     INIT_STATUS = False
@@ -11,37 +12,39 @@ class LCDController():
     PIN_TX = None
     PIN_RS = None
 
+    # Inputs:
+    #   pi - pigpio instance
+    #   rx - rx gpio pin on pi
+    #   tx - tx gpio pin on pi
+    #   rs - reset gpio pin on pi
     def __init__(self, pi, rx, tx, rs):
         self.PI = pi
         self.PIN_RX = rx
         self.PIN_TX = tx
         self.PIN_RS = rs
 
+    # starts serial connection with LCD
     def init(self):
 
         init_status = False
 
         # initiate serial on provided ports
-        # self.PI.set_pull_up_down(self.PIN_RS, pigpio.PUD_DOWN)
-        # self.PI.set_mode(self.PIN_RS, pigpio.OUTPUT)
-        self.PI.set_mode(self.PIN_TX, pigpio.ALT5)
-        self.PI.set_mode(self.PIN_RX, pigpio.ALT5)
+        # self.PI.set_pull_up_down(self.PIN_RS, pigpio.PUD_DOWN) # not permitted. keep commented
+        # self.PI.set_mode(self.PIN_RS, pigpio.OUTPUT) # not permitted. keep commented
+        self.PI.set_mode(self.PIN_TX, pigpio.ALT5) # ALT5 allows UART comm on /dev/ttyS0
+        self.PI.set_mode(self.PIN_RX, pigpio.ALT5) # ALT5 allows UART comm on /dev/ttyS0
 
-        # import subprocess
-        # result = subprocess.run(['ls', '/dev/'], stdout=subprocess.PIPE)
-        # print(result.stdout)
-
+        # attempt to open connection on /dev/ttyS0
         try:
             self.LCD = serial.Serial(
-                port="/dev/ttyS0", 
-                baudrate=9600, 
+                port="/dev/ttyS0",      # port
+                baudrate=9600,          # default baud rate
             )
-            # self.LCD.open()
-
-            # TODO init signal
 
             print("Successfully started LCD")
             init_status = True
+
+        # when connectin fails
         except IOError:
             print(traceback.format_exc())
             print("Could not initiate LCD")
@@ -51,28 +54,33 @@ class LCDController():
         self.INIT_STATUS = init_status
 
         # set baud
-        # self.LCD.write(b'\x00\x0B\x01\x38')
+        # self.LCD.write(b'\x00\x0B\x01\x38') # not required. but keep commented pls :)
 
-        # resset and clear screen
+        # reset and clear screen
         self.reset()
         self.clear()
+        time.sleep(1)
 
-        time.sleep(1)
+        # we're not really doing these but keep commented oops
         # set text configs
-        self.LCD.write(b'\xFF\x7F\xFF\xFF') # initial text color, white
-        time.sleep(1)
+        # self.LCD.write(b'\xFF\x7F\xFF\xFF') # initial text color, white
         # self.LCD.write(b'') # initial screen oreintation, portrait
+
         self.LCD.write(b'\xFF\x7D\x00\x07') # initial font FONT_7X8
         time.sleep(1)
 
         return init_status
     
+    # this writes signal but with extra steps...
+    # ... those extra steps are flushing the output buffer and waiting .. just in case
     def write_signal(self, signal):
         response = None
         self.LCD.write(signal)
         self.LCD.flush()
         while not self.LCD.readable():
             time.sleep(0.01)
+
+        # TODO : sometimes this gives us an error but we dont have time to fix that rn. keep commented :(
         if self.LCD.readable():
             # response = self.LCD.read(size=1)
             response = 0
@@ -84,6 +92,7 @@ class LCDController():
 
         return response
     
+    # pull down reset pin and wait 5 seconds just in case
     def reset(self):
         self.PI.write(self.PIN_RS, 0)
         time.sleep(0.5)
@@ -93,10 +102,12 @@ class LCDController():
         self.LCD.reset_output_buffer()
         print("reset lcd")
 
+    # send clear command
     def clear(self):
         self.write_signal(b'\xFF\xD7')
         print("cleared lcd")
 
+    # encode and send string
     def message(self, msg: str):
         signal = b'\x00\x06'
         # signal += str.encode(msg[:255])
@@ -107,7 +118,7 @@ class LCDController():
 
         print("sent string to LCD")
 
-        # TODO : wait till sucess
+    # predefined messages for your convinience 
 
     def brewing_message(self):
         self.message("brewing...")
@@ -121,6 +132,7 @@ class LCDController():
     def ready_message(self):
         self.message("ready to brew")
 
+# used for testing. ignore but keep for future testing
 if __name__ == "__main__":
     # use arguments as ionput for message
     pi = pigpio.pi()
