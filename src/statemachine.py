@@ -75,7 +75,7 @@ class StateMachine():
 	def time_brewing(self):
 		self.timer_done = True
 		# restart timer
-		set_time(self.preset_time)
+		self.set_time(self.preset_time)
 
 	def set_time(self, preset_time):
 		self.preset_time = preset_time
@@ -114,9 +114,14 @@ class StateMachine():
 				elif self.brew_request:
 					print("in brewing state from brew request")
 					self.state = 1
+					self.brew_request = False
 				elif self.timer_done:
 					print("in brewing state from timer done")
 					self.state = 1
+					self.timer_done = False
+				else:
+					# if input sent in wrong state, clear flags
+					self.cancel_request = False
 
 			elif self.state == 1:
 				# SET OUTPUTS
@@ -132,6 +137,9 @@ class StateMachine():
 				if self.cancel_request:
 					print("in dirty state from cancel")
 					self.state = 2
+				else:
+					self.brew_request = False
+					self.timer_done = False
 
 			elif self.state == 2:
 				# SET OUTPUTS
@@ -142,9 +150,10 @@ class StateMachine():
 				# filter cleaned button pressed
 				if misc_ctrl.clean_button_pressed():
 					self.state = 0
-
-			# reset flags
-			self.brew_request = False
+				else:
+					self.timer_done = False
+					self.brew_request = False
+					self.cancel_request = False
 
 			# allow 0.2 seconds for user to press buttons
 			time.sleep(0.2)
