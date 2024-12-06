@@ -89,6 +89,22 @@ class StateMachine():
     def set_cancel_request(self):
         self.cancel_request = True
 
+    def test_lcd(self):
+        pi = pigpio.pi()
+        lcd_controller = LCDController(pi, 14, 15, 16)
+        lcd_controller.init()
+        time.sleep(5)
+        lcd_controller.message("hello world!")
+        time.sleep(5)
+        lcd_controller.write_signal(b'\xFF\xD7')
+        lcd_controller.write_signal(b'\x00\x06\x48\x65\x6C\x6C\x6F\x00')
+        time.sleep(3)
+        lcd_controller.clear()
+        time.sleep(3)
+        while True:
+            lcd_controller.ready_message()
+            time.sleep(1)
+
     def start_machine(self):
         print("starting state machine. initializing components")
         # initalize components
@@ -112,6 +128,7 @@ class StateMachine():
         lcd_ctrl = LCDController(pi, rx, tx, reset)
         # lcd_controller.testing()
         print("lcd init : ", lcd_ctrl.init())
+        print("lcd controller's LCD: ", lcd_ctrl.LCD)
         time.sleep(10)
         lcd_ctrl.write_signal(b'\xFF\xD7')
         lcd_ctrl.write_signal(b'\x00\x06\x48\x65\x6C\x6C\x6F\x00')
