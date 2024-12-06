@@ -5,6 +5,7 @@ Explenation blah blah blah
 ## State Machine
 
 statemachine.py is a Moore state machine that controls the state of our system.
+
 Outputs:
 - LEDs: green: Ready; blue: Brewing; red: Finished/Dirty
 - uLCD: displays the current state
