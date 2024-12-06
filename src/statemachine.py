@@ -109,14 +109,24 @@ class StateMachine():
 			brew_button, clean_button)
 		brew_ctrl = brewer_controller.BrewerController(pi, thermo, heat, buzzer)
 		lcd_ctrl = lcd_controller.LCDController(pi, rx, tx, reset)
-		lcd_ctrl.init()
-		time.sleep(5)
+		# lcd_controller.testing()
+        print("lcd init : ", lcd_ctrl.init())
+		time.sleep(10)
+		lcd_ctrl.write_signal(b'\xFF\xD7')
+		lcd_ctrl.write_signal(b'\x00\x06\x48\x65\x6C\x6C\x6F\x00')
+		print("rx mode: ", pi.get_mode(rx))
+		print("tx mode: ", pi.get_mode(tx))
+
+		lcd_ctrl.ready_message()
+		time.sleep(0.5)
+		print("sent ready message before loop")
 
 		while True:
 			if self.state == 0:
 				# SET OUTPUTS
 				# can this be more efficient? constantly setting even though already set?
 				lcd_ctrl.ready_message()
+				time.sleep(0.5)
 				misc_ctrl.set_green_led()
 
 				# HANDLE STATE TRANSITIONS
@@ -150,6 +160,7 @@ class StateMachine():
 
 			elif self.state == 1:
 				lcd_ctrl.brewing_message()
+				time.sleep(0.5)
 				misc_ctrl.set_blue_led()
 				if brew_ctrl.is_brewing():
 					if self.cancel_request:
@@ -167,6 +178,7 @@ class StateMachine():
 
 			elif self.state == 2:
 				lcd_ctrl.cleaning_message()
+				time.sleep(0.5)
 				# SET OUTPUTS
 				misc_ctrl.set_red_led()
 

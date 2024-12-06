@@ -141,8 +141,9 @@ class LCDController():
         time.sleep(0.5)
 
 # used for testing. ignore but keep for future testing
-if __name__ == "__main__":
-    # use arguments as ionput for message
+# if __name__ == "__main__":
+def testing():
+   # use arguments as ionput for message
     pi = pigpio.pi()
     lcd_controller = LCDController(pi, 14, 15, 16)
     lcd_controller.init()
