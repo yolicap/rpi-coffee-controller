@@ -1,4 +1,5 @@
 import pigpio
+from threading import *
 
 # pi = pigpio.pi()
 # print("read: ", pi.read(4))
@@ -6,6 +7,9 @@ import pigpio
 
 # handles raspberry pi inputs and outputs
 class MiscController():
+    blinking_process = None
+    blinking_active = False
+
     # outputs
     blue_led = None
     red_led = None
@@ -22,6 +26,7 @@ class MiscController():
         self.brew_button = brew_button
         self.clean_button = clean_button
         self.pi = pi
+        self.blinking_process = Thread(target = self.blink_handler)
 
     def brew_button_pressed(self):
         return self.pi.read(self.brew_button)
@@ -29,12 +34,24 @@ class MiscController():
     def clean_button_pressed(self):
         return self.pi.read(self.clean_button)
 
-    def set_blue_led(self, value):
-        self.pi.write(self.blue_led, value)
+    def set_blue_led(self):
+        self.pi.write(self.blue_led, 1)
+        self.pi.write(self.red_led, 0)
 
-    def set_red_led(self, value):
-        self.pi.write(self.red_led, value)
+    def set_red_led(self):
+        self.pi.write(self.red_led, 1)
+        self.pi.write(self.blue_led, 0)
 
-    def get_blue_led(self):
-        return self.pi.read(self.blue_led)
+    def blink_leds(self):
+        self.blinking_active = True
+        self.blinking_process.start()
 
+    def stop_blinking(self):
+        self.blinking_active = False
+        self.blinking_process.join()
+
+    def blink_handler(self):
+        while self.blinking_active:
+            self.pi.write(self.blue_led, not self.pi.read(self.blue_led))
+            self.pi.write(self.red_led, 0)
+        # end thread

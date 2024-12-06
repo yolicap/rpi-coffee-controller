@@ -8,6 +8,7 @@ import os
 import sys
 child = os.path.abspath(os.path.join(os.path.dirname(__file__), 'controllers'))
 sys.path.append(child)
+import brewer_controller
 import misc_controller
 
 class StateMachine():
@@ -31,10 +32,10 @@ class StateMachine():
 		preset_min = int(self.preset_time[3:5])
 		delay = 0
 
-		# assume for now that datetime.now() gets the correct time in the correct zone
 		curr_time = datetime.datetime.now().time()
-		print("current time: ", curr_time)
+		# EST is 5 hours behind this clock
 		curr_hour = (int(curr_time.hour) - 5) % 24
+		print("current time: ", curr_time)
 		curr_min = int(curr_time.minute)
 		curr_sec = int(curr_time.second)
 
@@ -45,7 +46,6 @@ class StateMachine():
 		if curr_min >= 60:
 			curr_hour += 1
 			curr_min = 0
-		print("delay after seconds: ", delay)
 
 		# count remainder of minutes in current hour
 		if curr_hour != preset_hour or (curr_hour == int(preset_hour) and int(preset_min) < curr_min):
@@ -55,7 +55,6 @@ class StateMachine():
 			# count difference in minutes
 			delay += (int(preset_min) - curr_min) * 60
 			return delay
-		print("delay after ", 60 - curr_min, " minutes: ", delay)
 
 		# count difference in hours
 		hour_diff = 0
@@ -64,11 +63,9 @@ class StateMachine():
 		else:
 			hour_diff = int(preset_hour) - curr_hour
 		delay += hour_diff * 60 * 60
-		print("delay after hour: ", delay)
 
 		# count minutes in preset time
 		delay += int(preset_min) * 60
-		print("got delay of ", delay, " seconds")
 		return delay
 
 	# function to run when timer ends. handle brew at a set time
@@ -86,7 +83,7 @@ class StateMachine():
 
 	def set_brew_request(self):
 		self.brew_request = True
-	
+
 	def set_cancel_request(self):
 		self.cancel_request = True
 
@@ -94,15 +91,24 @@ class StateMachine():
 		print("starting state machine. initializing components")
 		# initalize components
 		pi = pigpio.pi()
-		misc_ctrl = misc_controller.MiscController(pi, blue_led=22, red_led=27,
-			brew_button=17, clean_button=23)
+		# GPIO numbers
+		blue_led = 22
+		red_led = 27
+		brew_button = 17
+		clean_button = 23
+		thermo = 26
+		heat = 24
+		buzzer = 25
+		# controllers
+		misc_ctrl = misc_controller.MiscController(pi, blue_led, red_led,
+			brew_button, clean_button)
+		brew_ctrl = brewer_controller.BrewerController(pi, thermo, heat, buzzer)
 
 		while True:
 			if self.state == 0:
 				# SET OUTPUTS
-				# can this be more efficient? constantly setting to the same value?
-				misc_ctrl.set_blue_led(1)
-				misc_ctrl.set_red_led(0)
+				# can this be more efficient? constantly setting even though already set?
+				misc_ctrl.set_blue_led()
 
 				# HANDLE STATE TRANSITIONS
 				# manual brewing by button press
@@ -115,6 +121,7 @@ class StateMachine():
 					print("in brewing state from brew request")
 					self.state = 1
 					self.brew_request = False
+				# brewing at set time
 				elif self.timer_done:
 					print("in brewing state from timer done")
 					self.state = 1
@@ -124,27 +131,24 @@ class StateMachine():
 					self.cancel_request = False
 
 			elif self.state == 1:
-				# SET OUTPUTS
-				misc_ctrl.set_blue_led(not misc_ctrl.get_blue_led())
-				misc_ctrl.set_red_led(0)
-				# there is probably a better way to do the blinking
-				# but waiting 0.5 seconds should not be too much of a problem because
-				# brewing for 0.5 too long or too short will not make much of a difference
-				time.sleep(0.5)
+				if brew_ctrl.is_brewing():
+					if self.cancel_request:
+						print("in dirty state from cancel")
+						brew_ctrl.stop_brew()
+						misc_ctrl.stop_blinking()
+						self.cancel_request = False
+						self.state = 2
+				else: # start brewing
+					brew_ctrl.brew(5)
+					misc_ctrl.blink_leds()
 
-				# HANDLE STATE TRANSITIONS
-				# TODO how to know when brewing is done?
-				if self.cancel_request:
-					print("in dirty state from cancel")
-					self.state = 2
-				else:
-					self.brew_request = False
-					self.timer_done = False
+				# clear flags
+				self.brew_request = False
+				self.timer_done = False
 
 			elif self.state == 2:
 				# SET OUTPUTS
-				misc_ctrl.set_red_led(1)
-				misc_ctrl.set_blue_led(0)
+				misc_ctrl.set_red_led(0)
 
 				# HANDLE STATE TRANSITIONS
 				# filter cleaned button pressed
