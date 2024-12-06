@@ -15,7 +15,8 @@ def state_machine_handler():
     if not sm:
         sm = statemachine.StateMachine()
         print("starting state machine in app.py")
-        sm.start_machine()
+        # sm.start_machine()
+        sm.test_lcd()
     else:
         print("state machine already initialized")
 
