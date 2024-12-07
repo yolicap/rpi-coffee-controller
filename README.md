@@ -45,7 +45,6 @@ The `BrewerController` controls different components in the original PCB that ca
 
 ## Web App
 Our system is ran starting from app.py. It creates an instance of the state machine and starts it. On the web page, the user can press a button to start brewing, to cancel brewing, set a time to brew at every day automcatically, and remove the automatic brewing.
-<picture of UI>
 
 ## Dependencies
 - [pigpio](https://abyz.me.uk/rpi/pigpio/index.html) - raspberry pi gpio deamon plus python pigpio library
