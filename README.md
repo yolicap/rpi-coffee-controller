@@ -46,6 +46,9 @@ The `BrewerController` controls different components in the original PCB that ca
 ## Web App
 Our system is ran starting from app.py. It creates an instance of the state machine and starts it. On the web page, the user can press a button to start brewing, to cancel brewing, set a time to brew at every day automcatically, and remove the automatic brewing.
 
+## mbed
+We added an mbed component so we can use the mbed a middle man to communicate with the LCD rather than using LCDController. This just improves reliability of the connection with the LCD. In the future it would be greate to remove this dependency and only use the Raspberry Pi to communicate with the LCD.
+
 ## Dependencies
 - [pigpio](https://abyz.me.uk/rpi/pigpio/index.html) - raspberry pi gpio deamon plus python pigpio library
 - [Flask](https://flask.palletsprojects.com/en/stable/) - python web app framework
