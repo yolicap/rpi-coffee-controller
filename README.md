@@ -1,7 +1,5 @@
 # Raspberry Pi Smart Coffee ☕️
 
-Explenation blah blah blah
-
 ## State Machine
 
 statemachine.py is a Moore state machine that controls the state of our system.
